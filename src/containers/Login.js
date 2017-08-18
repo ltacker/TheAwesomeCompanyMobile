@@ -1,10 +1,6 @@
 import React, { Component } from 'react';
 import { Text, Image, View, StyleSheet, TextInput, Button } from 'react-native';
 
-import Meteor from 'react-native-meteor';
-
-const SERVER_URL = 'ws://localhost:3000/websocket';
-
 
 export default class Login extends Component {
   constructor(props) {
@@ -12,27 +8,31 @@ export default class Login extends Component {
       this.state = {
           username: '',
           password: '',
+          loginErrMsg: '',
       };
-      this.onLogin = this.onLogin.bind(this);
+      this.onLoginPress = this.onLoginPress.bind(this);
   }
 
   static defaultProps = {
   }
 
-  onLogin(e) {
+  onLoginPress(e) {
       var self = this;
       e.preventDefault();
 
-
+      self.props.meteor.loginWithPassword(this.state.username, this.state.password, function(err) {
+          if (err) {
+              self.setState({loginErrMsg: err.reason});
+          } else {
+              self.props.onLogin();
+          }
+      });
   }
 
-  componentWillMount() {
-      Meteor.connect(SERVER_URL);
-  }
 
   render() {
     return (
-      <View style={styles.container}>
+      <View style={{justifyContent: 'center',alignItems: 'center'}} >
         <Image source={require('../images/palm.png')} style={{width: 60, height: 60}} />
         <Image source={require('../images/title.png')} style={{width: 270, height: 32}} />
         <View style={{margin:30}} />
@@ -42,6 +42,7 @@ export default class Login extends Component {
             onChangeText={(text) => this.setState({username:text})}
             value={this.state.username}
         />
+        <View style={{margin:10}} />
         <TextInput
             placeholder='Password'
             style={{width: 220}}
@@ -51,21 +52,13 @@ export default class Login extends Component {
         />
         <View style={{margin:20}} />
         <Button
-            onPress={this.onLogin}
+            onPress={this.onLoginPress}
             title="Submit"
             color="#2A837C"
         />
+        <View style={{margin:20}} />
+        <Text>{this.state.loginErrMsg}</Text>
       </View>
     );
   }
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgb(238, 197, 122)',
-    }
-});
